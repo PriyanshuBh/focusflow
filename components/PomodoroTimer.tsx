@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SettingsModal } from "./SettingsModal";
-import { DevTools } from "./DevTools";
+// import { DevTools } from "./DevTools";
 import { useTimerContext } from "@/contexts/TimerContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { PomodoroMiniWidget } from "./PomodoroMiniWidget";
@@ -132,7 +132,7 @@ export default function PomodoroTimer() {
   const [mode, setMode] = useState<TimerMode>("focus");
   const [cycleCount, setCycleCount] = useState(0);
   const [timerSpeed, setTimerSpeed] = useState(1);
-  const [showDevTools, setShowDevTools] = useState(false);
+  // const [showDevTools, setShowDevTools] = useState(false);
   const [autoStart, setAutoStart] = useState(true);
   const [showMiniWidget, setShowMiniWidget] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -301,20 +301,20 @@ export default function PomodoroTimer() {
     setTime(settings[`${mode}Time`] * 60);
   };
 
-  const handleSpeedChange = (speed: number) => {
-    setTimerSpeed(speed);
-  };
+  // const handleSpeedChange = (speed: number) => {
+  //   setTimerSpeed(speed);
+  // };
 
-  const handleModeChange = (newMode: TimerMode) => {
-    if (newMode !== "focus") {
-      newMode = settings.breakType === "short" ? "shortBreak" : "longBreak";
-    }
-    switchMode(newMode);
-  };
+  // const handleModeChange = (newMode: TimerMode) => {
+  //   if (newMode !== "focus") {
+  //     newMode = settings.breakType === "short" ? "shortBreak" : "longBreak";
+  //   }
+  //   switchMode(newMode);
+  // };
 
-  const handleCycleChange = (cycle: number) => {
-    setCycleCount(cycle);
-  };
+  // const handleCycleChange = (cycle: number) => {
+  //   setCycleCount(cycle);
+  // };
 
   const scrollToTimer = () => {
     timerRef.current?.scrollIntoView({ behavior: "smooth" });
