@@ -131,7 +131,7 @@ export default function PomodoroTimer() {
   const [showSettings, setShowSettings] = useState(false);
   const [mode, setMode] = useState<TimerMode>("focus");
   const [cycleCount, setCycleCount] = useState(0);
-  const [timerSpeed, setTimerSpeed] = useState(1);
+  const [timerSpeed] = useState(1);
   // const [showDevTools, setShowDevTools] = useState(false);
   const [autoStart, setAutoStart] = useState(true);
   const [showMiniWidget, setShowMiniWidget] = useState(false);
@@ -143,19 +143,19 @@ export default function PomodoroTimer() {
 
   const progress = 1 - time / (settings[`${mode}Time`] * 60);
 
-  const switchMode = useCallback(
-    (newMode: TimerMode) => {
-      setMode(newMode);
-      // Only set initial time if we're starting fresh
-      if (time === 0) {
-        setTime(settings[`${newMode}Time`] * 60);
-      }
-      if (autoStart) {
-        setIsActive(true);
-      }
-    },
-    [settings, autoStart, time]
-  );
+  // const switchMode = useCallback(
+  //   (newMode: TimerMode) => {
+  //     setMode(newMode);
+  //     // Only set initial time if we're starting fresh
+  //     if (time === 0) {
+  //       setTime(settings[`${newMode}Time`] * 60);
+  //     }
+  //     if (autoStart) {
+  //       setIsActive(true);
+  //     }
+  //   },
+  //   [settings, autoStart, time]
+  // );
 
   const nextMode = useCallback(() => {
     if (audioRef.current) {
