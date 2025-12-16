@@ -1,265 +1,68 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, memo } from "react";
-import {
-  Eye,
-  Settings2,
-  RotateCcw,
+import { useState, useEffect, useCallback, useRef } from "react";
+import { 
+  Play, 
+  Pause, 
+  RotateCcw, 
+  SkipForward, 
+  Settings2, 
+  Zap, 
   Coffee,
-  Play,
-  Pause,
-  SkipForward,
+  Timer as TimerIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SettingsModal } from "./SettingsModal";
-// import { DevTools } from "./DevTools";
 import { useTimerContext } from "@/contexts/TimerContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { PomodoroMiniWidget } from "./PomodoroMiniWidget";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "./ui/tooltip";
 
 type TimerMode = "focus" | "shortBreak" | "longBreak";
 
-const ProgressCircle = memo(({ progress }: { progress: number }) => (
-  <svg className="absolute transform -rotate-90 w-full h-full">
-    <circle
-      cx="150"
-      cy="150"
-      r="145"
-      fill="none"
-      stroke="rgba(75, 85, 99, 0.3)"
-      strokeWidth="10"
-    />
-    <circle
-      cx="150"
-      cy="150"
-      r="145"
-      fill="none"
-      stroke="rgba(209, 213, 219, 0.8)"
-      strokeWidth="10"
-      strokeDasharray={2 * Math.PI * 145}
-      strokeDashoffset={2 * Math.PI * 145 * (1 - progress)}
-      strokeLinecap="round"
-      style={{
-        transition: "stroke-dashoffset 0.5s ease",
-        willChange: "stroke-dashoffset",
-      }}
-    />
-  </svg>
-));
-
-ProgressCircle.displayName = "ProgressCircle";
-
-const formatTime = (timeInSeconds: number) => {
-  const minutes = Math.floor(timeInSeconds / 60);
-  const seconds = timeInSeconds % 60;
-  return `${minutes.toString().padStart(2, "0")}:${seconds
-    .toString()
-    .padStart(2, "0")}`;
-};
-
-const TimerDisplay = memo(
-  ({
-    time,
-    mode,
-    cycleCount,
-  }: {
-    time: number;
-    mode: TimerMode;
-    cycleCount: number;
-  }) => (
-    <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-100">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={mode}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-          className="flex flex-col items-center"
-        >
-          {mode === "focus" ? (
-            <Eye className="w-5 h-5 mb-2 opacity-60" />
-          ) : (
-            <Coffee className="w-5 h-5 mb-2 opacity-60" />
-          )}
-          <div className="text-6xl font-light tracking-wider mb-1">
-            {formatTime(time)}
-          </div>
-          <div className="text-sm tracking-[0.2em] opacity-60 mb-2">
-            {mode === "focus"
-              ? "FOCUS"
-              : mode === "shortBreak"
-              ? "SHORT BREAK"
-              : "LONG BREAK"}
-          </div>
-        </motion.div>
-      </AnimatePresence>
-      <div className="flex gap-1">
-        {[...Array(4)].map((_, i) => (
-          <TooltipProvider key={i}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div
-                  className={`w-1 h-1 rounded-full ${
-                    i < cycleCount ? "bg-gray-200" : "bg-gray-400/60"
-                  }`}
-                />
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs">
-                {`${cycleCount} cycles completed`}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ))}
-      </div>
-    </div>
-  )
-);
-
-TimerDisplay.displayName = "TimerDisplay";
-
 export default function PomodoroTimer() {
-  const { settings, updateMetrics, metrics } = useTimerContext();
+  const { settings,metrics, updateMetrics } = useTimerContext();
   const [time, setTime] = useState(settings.focusTime * 60);
   const [isActive, setIsActive] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [mode, setMode] = useState<TimerMode>("focus");
-  const [cycleCount, setCycleCount] = useState(0);
-  const [timerSpeed] = useState(1);
-  // const [showDevTools, setShowDevTools] = useState(false);
-  const [autoStart, setAutoStart] = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
   const [showMiniWidget, setShowMiniWidget] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  // const lastTimeRef = useRef(time);
-
+  const [cycleCount, setCycleCount] = useState(0);
   const timerRef = useRef<HTMLDivElement>(null);
+  
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
 
   const progress = 1 - time / (settings[`${mode}Time`] * 60);
 
-  // const switchMode = useCallback(
-  //   (newMode: TimerMode) => {
-  //     setMode(newMode);
-  //     // Only set initial time if we're starting fresh
-  //     if (time === 0) {
-  //       setTime(settings[`${newMode}Time`] * 60);
-  //     }
-  //     if (autoStart) {
-  //       setIsActive(true);
-  //     }
-  //   },
-  //   [settings, autoStart, time]
-  // );
-
-  const nextMode = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch((error) => {
-        console.warn("Audio playback failed:", error);
-      });
-    }
-
+  const switchMode = useCallback((newMode: TimerMode) => {
     setIsActive(false);
+    setMode(newMode);
+    setTime(settings[`${newMode}Time`] * 60);
+  }, [settings]);
 
+  const handleTimerComplete = useCallback(() => {
+    if (audioRef.current) audioRef.current.play();
+    
     if (mode === "focus") {
-      const newCycleCount = (cycleCount + 1) % settings.cyclesBeforeLongBreak;
-      const shouldTakeLongBreak = newCycleCount === 0;
-      const breakMode = shouldTakeLongBreak ? "longBreak" : "shortBreak";
-      const newDuration = settings[`${breakMode}Time`] * 60;
-
-      setMode(breakMode);
-      setTime(newDuration);
-      setCycleCount(newCycleCount);
-
-      if (autoStart) {
-        setIsActive(true);
-      }
+      const nextCycle = (cycleCount + 1) % settings.cyclesBeforeLongBreak;
+      setCycleCount(nextCycle);
+      const isLongBreak = nextCycle === 0;
+      switchMode(isLongBreak ? "longBreak" : "shortBreak");
+      updateMetrics("focusSessions", 1); // Increments session count
+    updateMetrics("totalFocusTime", settings.focusTime); // Adds minutes to total
     } else {
-      setMode("focus");
-      setTime(settings.focusTime * 60);
-
-      if (autoStart) {
-        setIsActive(true);
-      }
+      // Record break metrics
+    if (mode === "shortBreak") updateMetrics("shortBreaks", 1);
+    if (mode === "longBreak") updateMetrics("longBreaks", 1)
+      switchMode("focus");
     }
-  }, [mode, settings, autoStart, cycleCount]);
+  }, [mode, cycleCount, settings, switchMode, updateMetrics]);
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-
-    if (isActive && time > 0) {
-      interval = setInterval(() => {
-        setTime((prevTime) => {
-          const newTime = Math.max(prevTime - timerSpeed, 0);
-          if (newTime === 0) {
-            setIsActive(false);
-            setTimeout(() => {
-              if (mode === "focus") {
-                const newCycleCount =
-                  (cycleCount + 1) % settings.cyclesBeforeLongBreak;
-                const shouldTakeLongBreak = newCycleCount === 0;
-                const breakMode = shouldTakeLongBreak
-                  ? "longBreak"
-                  : "shortBreak";
-
-                updateMetrics("focusSessions", 0.5);
-                updateMetrics("totalFocusTime", 25 / 2);
-
-                // Update streaks
-                updateMetrics("dailyStreak", metrics.dailyStreak + 1);
-                if (metrics.dailyStreak + 1 > metrics.bestFocusStreak) {
-                  updateMetrics("bestFocusStreak", metrics.dailyStreak + 1);
-                }
-
-                if (shouldTakeLongBreak) {
-                  updateMetrics("longBreaks", 0.5);
-                }
-
-                setMode(breakMode);
-                setTime(settings[`${breakMode}Time`] * 60);
-                setCycleCount(newCycleCount);
-
-                if (autoStart) {
-                  setIsActive(true);
-                }
-              } else {
-                if (mode === "shortBreak") {
-                  updateMetrics("shortBreaks", 0.5);
-                }
-                setMode("focus");
-                setTime(settings.focusTime * 60);
-
-                if (autoStart) {
-                  setIsActive(true);
-                }
-              }
-            }, 0);
-          }
-          return newTime;
-        });
-      }, 1000 / timerSpeed);
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [
-    isActive,
-    time,
-    timerSpeed,
-    mode,
-    settings,
-    cycleCount,
-    autoStart,
-    updateMetrics,
-    metrics,
-  ]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -280,218 +83,209 @@ export default function PomodoroTimer() {
       }
     };
   }, []);
-
-  // useEffect(() => {
-  //   if (!isActive) {
-  //     const timeSpent = lastTimeRef.current - time;
-  //     if (timeSpent > 0) {
-  //       if (mode === "focus") {
-  //         updateMetrics("totalFocusTime", Math.floor(timeSpent / 60));
-  //       } else {
-  //         updateMetrics("totalBreakTime", Math.floor(timeSpent / 60));
-  //       }
-  //     }
-  //   }
-  //   lastTimeRef.current = time;
-  // }, [isActive, time, mode, updateMetrics]);
-
-  const toggleTimer = () => setIsActive(!isActive);
-  const resetTimer = () => {
-    setIsActive(false);
-    setTime(settings[`${mode}Time`] * 60);
-  };
-
-  // const handleSpeedChange = (speed: number) => {
-  //   setTimerSpeed(speed);
-  // };
-
-  // const handleModeChange = (newMode: TimerMode) => {
-  //   if (newMode !== "focus") {
-  //     newMode = settings.breakType === "short" ? "shortBreak" : "longBreak";
-  //   }
-  //   switchMode(newMode);
-  // };
-
-  // const handleCycleChange = (cycle: number) => {
-  //   setCycleCount(cycle);
-  // };
-
+  
   const scrollToTimer = () => {
     timerRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const containerClasses = "transform-gpu will-change-transform";
-  const progressCircleClasses = "transform-gpu will-change-transform";
 
-  const toggleMute = () => {
-    setIsMuted((prev) => !prev);
-    if (audioRef.current) {
-      audioRef.current.muted = !isMuted;
-    }
+// Inside PomodoroTimer.tsx
+useEffect(() => {
+  const timeStr = formatTime(time);
+  const status = mode === "focus" ? "Focus" : "Break";
+  
+  // Professional Tab Title: "14:59 | Focus"
+  document.title = isActive ? `${timeStr} | ${status}` : "FocusFlow";
+
+  // Cleanup: Reset title when component unmounts
+  return () => {
+    document.title = "FocusFlow";
   };
+}, [time, mode, isActive]);
+
+
+
+
+// 1. Add this useEffect to watch for setting changes
+useEffect(() => {
+  // This resets the time whenever the user saves new settings
+  // We check 'mode' to ensure we apply the correct duration (Focus vs Break)
+  const newTime = settings[`${mode}Time`] * 60;
+  setTime(newTime);
+  
+  // Optional: Stop the timer when settings change to prevent logic conflicts
+  setIsActive(false); 
+}, [settings, mode]);
+
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+
+    if (isActive && time > 0) {
+      interval = setInterval(() => {
+        setTime((prevTime) => {
+          const newTime = Math.max(prevTime - 1, 0);
+  
+          // TRIGGER METRICS CALCULATION AT ZERO
+          if (newTime === 0) {
+            setIsActive(false); // Stop the timer
+            
+            // Logic to record the data based on the mode
+            if (mode === "focus") {
+              // Record a focus session
+              updateMetrics("focusSessions", 1);
+              // Add the minutes from settings to total focus time
+              updateMetrics("totalFocusTime", settings.focusTime);
+              
+              // Update streaks (Logic inside your Context)
+              updateMetrics("dailyStreak", metrics.dailyStreak + 1);
+            } else if (mode === "shortBreak") {
+              updateMetrics("shortBreaks", 1);
+            } else if (mode === "longBreak") {
+              updateMetrics("longBreaks", 1);
+            }
+            
+            // Move to the next mode (handled by your nextMode/switchMode function)
+            setTimeout(() => handleTimerComplete(), 100);
+          }
+          return newTime;
+        });
+      }, 1000);
+    }
+    return () => { if (interval) clearInterval(interval); };
+  }, [isActive, time, mode, settings,metrics, updateMetrics, handleTimerComplete]);
 
   return (
     <>
-      <div
-        className={`${containerClasses} bg-gray-800 relative max-h-[32rem] bg-opacity-30 backdrop-filter backdrop-blur-lg rounded-2xl p-8 shadow-xl border border-gray-700`}
-        ref={timerRef}
-      >
-        <div className="relative flex flex-col items-center">
-          <div className="relative w-[300px] h-[300px]">
-            {/* Progress circle */}
-            <div
-              className={`${progressCircleClasses} relative w-[300px] h-[300px]`}
-            >
-              <svg className="absolute transform -rotate-90 w-full h-full">
-                <circle
-                  cx="150"
-                  cy="150"
-                  r="145"
-                  fill="none"
-                  stroke="rgba(75, 85, 99, 0.3)"
-                  strokeWidth="10"
-                />
-                <circle
-                  cx="150"
-                  cy="150"
-                  r="145"
-                  fill="none"
-                  stroke="rgba(209, 213, 219, 0.8)"
-                  strokeWidth="10"
-                  strokeDasharray={2 * Math.PI * 145}
-                  strokeDashoffset={2 * Math.PI * 145 * (1 - progress)}
-                  strokeLinecap="round"
-                  style={{ transition: "stroke-dashoffset 0.5s ease" }}
-                />
-              </svg>
-            </div>
+    <div className="bg-slate-900/40 backdrop-blur-2xl border border-white/5 rounded-[2.5rem] p-9 shadow-2xl relative overflow-hidden"   ref={timerRef}>
+     
 
-            {/* Timer content */}
-            <TimerDisplay time={time} mode={mode} cycleCount={cycleCount} />
-          </div>
-
-          {/* Controls */}
-          <div className="flex items-center gap-4 mt-8">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={resetTimer}
-              className="rounded-full bg-gray-700/50 hover:bg-gray-600/50 text-gray-200 w-10 h-10 p-0"
+      <div className="relative flex flex-col items-center">
+        {/* Mode Toggles */}
+        <div className="flex bg-slate-800/50 p-1 rounded-2xl mb-6 border border-white/5">
+          {(["focus", "shortBreak", "longBreak"] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => switchMode(m)}
+              className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
+                mode === m ? "bg-indigo-600 text-white shadow-lg" : "text-slate-500 hover:text-slate-300"
+              }`}
             >
-              <RotateCcw className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={toggleTimer}
-              className="rounded-full bg-gray-700/50 hover:bg-gray-600/50 text-gray-200 px-8 h-10"
-            >
-              {isActive ? (
-                <Pause className="w-4 h-4 mr-2" />
-              ) : (
-                <Play className="w-4 h-4 mr-2" />
-              )}
-              {isActive ? "PAUSE" : "START"}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={nextMode}
-              className="rounded-full bg-gray-700/50 hover:bg-gray-600/50 text-gray-200 w-10 h-10 p-0"
-            >
-              <SkipForward className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowSettings(true)}
-              className="rounded-full bg-gray-700/50 hover:bg-gray-600/50 text-gray-200 w-10 h-10 p-0"
-            >
-              <Settings2 className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleMute}
-              className="rounded-full bg-gray-700/50 hover:bg-gray-600/50 text-gray-200 w-10 h-10 p-0"
-            >
-              {isMuted ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M11 5L6 9H2v6h4l5 4V5z" />
-                  <line x1="23" y1="9" x2="17" y2="15" />
-                  <line x1="17" y1="9" x2="23" y2="15" />
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
-                </svg>
-              )}
-            </Button>
-          </div>
-
-          {/* Auto-start toggle */}
-          <div className="mt-4 flex items-center">
-            <input
-              type="checkbox"
-              id="autoStart"
-              checked={autoStart}
-              onChange={(e) => setAutoStart(e.target.checked)}
-              className="mr-2"
-            />
-            <label htmlFor="autoStart" className="text-gray-300 text-sm">
-              Auto-start next session
-            </label>
-          </div>
-
-          {/* Dev Tools Toggle */}
-          {/* {process.env.NODE_ENV !== "production" && (
-            <Button
-              variant="link"
-              onClick={() => setShowDevTools(!showDevTools)}
-              className="mt-4 text-gray-400 hover:text-gray-200"
-            >
-              {showDevTools ? "Hide Dev Tools" : "Show Dev Tools"}
-            </Button>
-          )} */}
-
-          {/* {process.env.NODE_ENV !== "production" && showDevTools && (
-            <DevTools
-              onSpeedChange={handleSpeedChange}
-              onModeChange={handleModeChange}
-              onCycleChange={handleCycleChange}
-              breakType={settings.breakType}
-            />
-          )} */}
+              {m.replace("Break", " Break")}
+            </button>
+          ))}
         </div>
-        <SettingsModal open={showSettings} onOpenChange={setShowSettings} />
+
+        {/* Circular Progress + Time */}
+        <div className="relative w-64 h-64 flex items-center justify-center">
+          <svg className="absolute w-full h-full -rotate-90">
+            <circle
+              cx="128"
+              cy="128"
+              r="120"
+              stroke="currentColor"
+              strokeWidth="8"
+              fill="transparent"
+              className="text-slate-800/50"
+            />
+            <motion.circle
+              cx="128"
+              cy="128"
+              r="120"
+              stroke="currentColor"
+              strokeWidth="8"
+              fill="transparent"
+              strokeDasharray={2 * Math.PI * 120}
+              initial={{ strokeDashoffset: 2 * Math.PI * 120 }}
+              animate={{ strokeDashoffset: 2 * Math.PI * 120 * (1 - progress) }}
+              className="text-indigo-500"
+              strokeLinecap="round"
+            />
+          </svg>
+          
+          <div className="text-center z-10">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={time}
+                // initial={{ opacity: 0, y: 5 }}
+                // animate={{ opacity: 1, y: 0 }}
+                className="text-6xl font-light tracking-tighter text-white font-mono"
+              >
+                {formatTime(time)}
+              </motion.div>
+            </AnimatePresence>
+            <p className="text-[10px] font-bold text-slate-500 tracking-[0.3em] uppercase mt-2 flex items-center justify-center gap-2">
+              {mode === 'focus' ? <Zap className="w-3 h-3 text-amber-500" /> : <Coffee className="w-3 h-3 text-blue-400" />}
+              {mode}
+            </p>
+            <div className="absolute bottom-4 right-21  p-6 opacity-10">
+        <TimerIcon className="w-10 h-10" />
       </div>
-      <PomodoroMiniWidget
-        time={time}
-        mode={mode}
-        isVisible={showMiniWidget}
-        onClick={scrollToTimer}
-      />
-      <audio ref={audioRef} src="/bell2.wav" preload="auto" />
-    </>
+          </div>
+        </div>
+
+        {/* Primary Controls */}
+        <div className="flex items-center gap-6 mt-6">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setTime(settings[`${mode}Time`] * 60)}
+            className="rounded-full hover:bg-white/5 text-slate-500"
+          >
+            <RotateCcw className="w-5 h-5" />
+          </Button>
+
+          <Button
+            onClick={() => setIsActive(!isActive)}
+            className={`w-20 h-20 rounded-full transition-all duration-500 ${
+              isActive 
+                ? "bg-slate-800 text-white hover:bg-slate-700" 
+                : "bg-indigo-600 text-white hover:bg-indigo-500 shadow-[0_0_30px_rgba(79,70,229,0.3)]"
+            }`}
+          >
+            {isActive ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 ml-1" />}
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleTimerComplete}
+            className="rounded-full hover:bg-white/5 text-slate-500"
+          >
+            <SkipForward className="w-5 h-5" />
+          </Button>
+        </div>
+
+        {/* Sessions Counter */}
+        <div className="mt-6 flex gap-2">
+          {[...Array(settings.cyclesBeforeLongBreak)].map((_, i) => (
+            <div 
+              key={i} 
+              className={`h-1.5 w-8 rounded-full transition-colors ${i < cycleCount ? "bg-indigo-500" : "bg-slate-800"}`} 
+            />
+          ))}
+        </div>
+
+        <Button
+          variant="ghost"
+          onClick={() => setShowSettings(true)}
+          className="mt-6 text-slate-500 hover:text-white text-xs gap-2"
+        >
+          <Settings2 className="w-4 h-4" />
+          Customize Session
+        </Button>
+      </div>
+
+      <SettingsModal open={showSettings} onOpenChange={setShowSettings} />
+     
+      <audio ref={audioRef} src="/bell2.wav"  preload="auto"   />
+    </div>
+     <PomodoroMiniWidget
+     time={time}
+     mode={mode}
+     isVisible={showMiniWidget}
+     onClick={ scrollToTimer }
+   />
+   </>
   );
 }
