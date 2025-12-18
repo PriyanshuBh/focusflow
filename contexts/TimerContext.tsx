@@ -39,7 +39,7 @@ interface TimerContextType {
   resetMetrics: () => void;
 }
 
-const defaultSettings: TimerSettings = {
+export const defaultSettings: TimerSettings = {
   focusTime: 25,
   shortBreakTime: 5,
   longBreakTime: 15,
@@ -104,17 +104,54 @@ export function TimerProvider({ children }: { children: ReactNode }) {
 
   const updateMetrics = (type: keyof TimerMetrics, value: number) => {
     setMetrics((prev) => {
-      const updated = {
-        ...prev,
-        [type]:
-          type === "lastUpdated"
-            ? new Date()
-            : type === "dailyStreak" ||
-              type === "totalTasksCompleted" ||
-              type === "bestFocusStreak"
-            ? value
-            : prev[type] + value,
-      };
+      let updated = { ...prev };
+
+      // Handle standard additive metrics (Focus sessions, time, breaks)
+      if (
+        type === "focusSessions" ||
+        type === "totalFocusTime" ||
+        type === "shortBreaks" ||
+        type === "longBreaks" ||
+        type === "totalTasksCompleted"
+      ) {
+        updated[type] = (prev[type] as number) + value;
+      }
+
+      // 🛡️ STREAK LOGIC: Triggered when a focus session is recorded
+      if (type === "focusSessions" && value > 0) {
+
+        const today = new Date();
+        const lastDate = new Date(prev.lastUpdated);
+        
+        // Reset time parts to compare only the calendar date
+        const isToday = today.toDateString() === lastDate.toDateString();
+        
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const isYesterday = yesterday.toDateString() === lastDate.toDateString();
+
+       // IF IT IS THE FIRST SESSION EVER (Streak is 0)
+      if (prev.dailyStreak === 0) {
+        updated.dailyStreak = 1;
+      } 
+      // IF IT IS A NEW DAY (Not today)
+      else if (!isToday) {
+        if (isYesterday) {
+          updated.dailyStreak = prev.dailyStreak + 1; // Continued streak
+        } else {
+          updated.dailyStreak = 1; // Broke streak, starting over
+        }
+      }
+        
+        // Update Best Streak if current daily streak is higher
+        if (updated.dailyStreak > prev.bestFocusStreak) {
+          updated.bestFocusStreak = updated.dailyStreak;
+        }
+      }
+
+      // Always update the timestamp
+      updated.lastUpdated = new Date();
+
       localStorage.setItem("timerMetrics", JSON.stringify(updated));
       return updated;
     });
