@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useTimerContext } from "@/contexts/TimerContext";
-import { Card } from "@/components/ui/card";
+import { motion } from "framer-motion";
 import {
   Trophy,
   Clock,
@@ -12,98 +12,162 @@ import {
   Timer,
   Coffee,
   Target,
+  TrendingUp,
 } from "lucide-react";
 
 interface MetricItemProps {
   label: string;
   value: string | number;
-  className?: string;
-  icon?: React.ReactNode;
+  icon: React.ReactNode;
+  colorClass: string;
+  delay?: number;
 }
 
 const MetricItem: React.FC<MetricItemProps> = ({
   label,
   value,
-  className,
   icon,
+  colorClass,
+  delay = 0,
 }) => (
-  <div
-    className={`p-4 rounded-lg ${className} transition-all duration-200 hover:scale-105`}
+  <motion.div
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay }}
+    className="relative group bg-slate-800/40 backdrop-blur-md border border-white/5 p-5 rounded-[2rem] overflow-hidden transition-all hover:border-white/10 hover:bg-slate-800/60"
   >
-    <div className="flex items-center gap-2 mb-2">
-      {icon}
-      <div className="text-sm text-gray-300">{label}</div>
+    <div className="flex items-center gap-4">
+      <div className={`p-3 rounded-2xl bg-white/5 ${colorClass} group-hover:scale-110 transition-transform`}>
+        {icon}
+      </div>
+      <div>
+        <div className="text-[8px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-[0.15em] mb-0.5">
+          {label}
+        </div>
+        <div className=" text-sm sm:text-xl font-bold text-white tracking-tight">
+          {typeof value === "number" ? value.toLocaleString() : value}
+        </div>
+      </div>
     </div>
-    <div className="text-2xl font-semibold text-gray-100">
-      {typeof value === "number" ? value.toLocaleString() : value}
-    </div>
-  </div>
+  </motion.div>
 );
 
-export const YourMetrics: React.FC = () => {
+export const YourMetrics: React.FC = React.memo(() => {
   const { metrics } = useTimerContext();
 
   const calculateAverageFocusTime = () => {
-    if (metrics.focusSessions === 0) return "0 mins";
+    if (metrics.focusSessions === 0) return "0m";
     const average = Math.round(metrics.totalFocusTime / metrics.focusSessions);
-    return `${average} mins`;
+    return `${average}m`;
   };
 
+  // Daily goal progress (e.g., goal is 8 sessions)
+  const dailyGoal = 8;
+  const progress = Math.min((metrics.focusSessions / dailyGoal) * 100, 100);
+
   return (
-    <Card className="bg-gray-800/50 backdrop-blur-lg border-gray-700 p-6 rounded-xl">
-      <h2 className="text-xl font-semibold mb-4 text-gray-100">Your Metrics</h2>
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="space-y-6">
+      {/* Header & Goal Section */}
+      <div className="bg-slate-900/40 border border-white/5 p-8 rounded-[2.5rem] backdrop-blur-xl">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+              <TrendingUp className="w-6 h-6 text-indigo-500" />
+              Focus Analytics
+            </h2>
+            <p className="text-slate-500 text-sm mt-1">Real-time performance overview</p>
+          </div>
+          
+          {/* <div className="w-full md:w-64 space-y-2">
+            <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest">
+              <span className="text-slate-400">Daily Intensity</span>
+              <span className="text-indigo-400">{Math.round(progress)}%</span>
+            </div>
+            <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                className="h-full bg-gradient-to-r from-indigo-600 to-blue-400 shadow-[0_0_15px_rgba(79,70,229,0.3)]"
+              />
+            </div>
+          </div> */}
+{metrics.dailyStreak >= 0 && (
+  <motion.div 
+    initial={{ opacity: 0, scale: 0.9 }}
+    animate={{ opacity: 1, scale: 1 }}
+    className=" p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center gap-3"
+  >
+    <div className="p-2 bg-indigo-500 rounded-lg">
+      <Trophy className="w-4 h-4 text-white" />
+    </div>
+    <div>
+      <p className="text-xs font-bold text-white uppercase tracking-tight">Focus Milestone</p>
+      <p className="text-[11px] text-indigo-300">You've maintained a {metrics.dailyStreak} day streak. Impressive consistency!</p>
+    </div>
+  </motion.div>
+)}
+        </div>
+
+        {/* Metrics Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <MetricItem
             label="Focus Sessions"
             value={metrics.focusSessions}
-            className="bg-blue-500/20 hover:bg-blue-500/30"
-            icon={<Target className="w-4 h-4 text-blue-400" />}
+            icon={<Target className="w-5 h-5" />}
+            colorClass="text-blue-400"
+            delay={0.1}
           />
           <MetricItem
-            label="Total Focus Time"
-            value={`${Math.round(metrics.totalFocusTime)} mins`}
-            className="bg-green-500/20 hover:bg-green-500/30"
-            icon={<Clock className="w-4 h-4 text-green-400" />}
+            label="Focus Time"
+            value={`${Math.round(metrics.totalFocusTime)}m`}
+            icon={<Clock className="w-5 h-5" />}
+            colorClass="text-emerald-400"
+            delay={0.2}
           />
           <MetricItem
             label="Daily Streak"
             value={metrics.dailyStreak}
-            className="bg-yellow-500/20 hover:bg-yellow-500/30"
-            icon={<Calendar className="w-4 h-4 text-yellow-400" />}
+            icon={<Zap className="w-5 h-5" />}
+            colorClass="text-amber-400"
+            delay={0.3}
           />
           <MetricItem
-            label="Tasks Completed"
+            label="Done Tasks"
             value={metrics.totalTasksCompleted}
-            className="bg-purple-500/20 hover:bg-purple-500/30"
-            icon={<CheckCircle2 className="w-4 h-4 text-purple-400" />}
+            icon={<CheckCircle2 className="w-5 h-5" />}
+            colorClass="text-purple-400"
+            delay={0.4}
           />
           <MetricItem
-            label="Best Focus Streak"
+            label="Best Streak"
             value={metrics.bestFocusStreak}
-            className="bg-red-500/20 hover:bg-red-500/30"
-            icon={<Trophy className="w-4 h-4 text-red-400" />}
+            icon={<Trophy className="w-5 h-5" />}
+            colorClass="text-red-400"
+            delay={0.5}
           />
           <MetricItem
-            label="Avg. Focus Time"
+            label="Avg. Session"
             value={calculateAverageFocusTime()}
-            className="bg-indigo-500/20 hover:bg-indigo-500/30"
-            icon={<Timer className="w-4 h-4 text-indigo-400" />}
+            icon={<Timer className="w-5 h-5" />}
+            colorClass="text-indigo-400"
+            delay={0.6}
           />
           <MetricItem
             label="Short Breaks"
             value={metrics.shortBreaks}
-            className="bg-orange-500/20 hover:bg-orange-500/30"
-            icon={<Coffee className="w-4 h-4 text-orange-400" />}
+            icon={<Coffee className="w-5 h-5" />}
+            colorClass="text-orange-400"
+            delay={0.7}
           />
           <MetricItem
             label="Long Breaks"
             value={metrics.longBreaks}
-            className="bg-teal-500/20 hover:bg-teal-500/30"
-            icon={<Zap className="w-4 h-4 text-teal-400" />}
+            icon={<Zap className="w-5 h-5" />}
+            colorClass="text-teal-400"
+            delay={0.8}
           />
         </div>
       </div>
-    </Card>
+    </div>
   );
-};
+});
