@@ -92,12 +92,11 @@ Built with the latest **Next.js 15** and **Tailwind CSS 4**, it offers a modern,
 ---
 
 ## 🏗 Architecture
-
 ```mermaid
 graph TD
     subgraph Client
         Browser[User Browser]
-        UI[Components (Timer, Kanban, Metrics)]
+        UI["Components (Timer, Kanban, Metrics)"]
     end
 
     subgraph Server
