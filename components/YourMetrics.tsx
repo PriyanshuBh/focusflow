@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import {
   Trophy,
   Clock,
-  Calendar,
   CheckCircle2,
   Zap,
   Timer,
@@ -62,8 +61,8 @@ export const YourMetrics: React.FC = React.memo(() => {
   };
 
   // Daily goal progress (e.g., goal is 8 sessions)
-  const dailyGoal = 8;
-  const progress = Math.min((metrics.focusSessions / dailyGoal) * 100, 100);
+  // const dailyGoal = 8;
+  // const progress = Math.min((metrics.focusSessions / dailyGoal) * 100, 100);
 
   return (
     <div className="space-y-6">
@@ -102,7 +101,7 @@ export const YourMetrics: React.FC = React.memo(() => {
     </div>
     <div>
       <p className="text-xs font-bold text-white uppercase tracking-tight">Focus Milestone</p>
-      <p className="text-[11px] text-indigo-300">You've maintained a {metrics.dailyStreak} day streak. Impressive consistency!</p>
+      <p className="text-[11px] text-indigo-300">You&apos;ve maintained a {metrics.dailyStreak} day streak. Impressive consistency!</p>
     </div>
   </motion.div>
 )}
@@ -171,3 +170,4 @@ export const YourMetrics: React.FC = React.memo(() => {
     </div>
   );
 });
+YourMetrics.displayName = 'YourMetrics';

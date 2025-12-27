@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Zap, Coffee, Timer } from "lucide-react";
+import { Zap, Coffee } from "lucide-react";
 import { useTimerContext } from "@/contexts/TimerContext";
 
 interface PomodoroMiniWidgetProps {
