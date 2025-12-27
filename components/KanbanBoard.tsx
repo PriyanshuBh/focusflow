@@ -213,3 +213,5 @@ else if (status !== "Done" && draggedTask.status === "Done") {
     </section>
   );
 })
+
+KanbanBoard.displayName = 'KanbanBoard';

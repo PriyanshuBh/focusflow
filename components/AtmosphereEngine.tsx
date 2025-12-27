@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Volume2, VolumeX, Volume1, Wind, CloudRain, Trees, Focus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { motion } from "framer-motion";
+
 
 const FOCUS_SOUNDS = [
   { id: "rain", name: "Deep Rain", icon: CloudRain, url: "https://orangefreesounds.com/wp-content/uploads/2023/06/Rain-storm-sound-effect.mp3" },
