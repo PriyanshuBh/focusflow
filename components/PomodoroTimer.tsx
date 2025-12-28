@@ -9,13 +9,16 @@ import {
   Settings2, 
   Zap, 
   Coffee,
-  Timer as TimerIcon
+  Timer as TimerIcon,
+  HelpCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SettingsModal } from "./SettingsModal";
 import { useTimerContext } from "@/contexts/TimerContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { PomodoroMiniWidget } from "./PomodoroMiniWidget";
+import { useKeyboardControls } from "@/hooks/useKeyboardControls";
+import { KeyboardHelp } from "./KeyboardHelp";
 
 type TimerMode = "focus" | "shortBreak" | "longBreak";
 
@@ -30,6 +33,29 @@ export default function PomodoroTimer() {
   const timerRef = useRef<HTMLDivElement>(null);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+
+  const toggleHelp = () => setIsHelpOpen((prev) => !prev);
+// 1. Define the actions the keyboard will trigger
+const toggleTimer = () => setIsActive(!isActive);
+  
+const resetTimer = () => {
+  setIsActive(false);
+  setTime(settings[`${mode}Time`] * 60);
+};
+
+const skipSession = () => {
+  // Your existing logic to switch modes (Focus -> Break etc)
+  if(mode !== "focus" ){
+    handleTimerComplete(); 
+  }
+ 
+};
+  // Pass toggleHelp to the keyboard hook
+  useKeyboardControls(toggleTimer, resetTimer, skipSession, toggleHelp);
+
+  
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -158,7 +184,20 @@ useEffect(() => {
   return (
     <>
     <div className="bg-slate-900/40 backdrop-blur-2xl border border-white/5 rounded-[2.5rem] p-9 shadow-2xl relative overflow-hidden"   ref={timerRef}>
-     
+     {/* --- ADD THE HELP BUTTON HERE --- */}
+     <div className="absolute bottom-6 right-6 z-20">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleHelp}
+            className="rounded-full w-8 h-8 text-slate-600 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all group"
+          >
+            <HelpCircle className="w-5 h-5" />
+            <span className="absolute right-10 scale-0 group-hover:scale-100 transition-all text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-400 whitespace-nowrap border border-white/5">
+              Shortcuts (?)
+            </span>
+          </Button>
+        </div>
 
       <div className="relative flex flex-col items-center">
         {/* Mode Toggles */}
@@ -167,6 +206,7 @@ useEffect(() => {
             <button
               key={m}
               onClick={() => switchMode(m)}
+              disabled={isActive || (time !== settings[`${mode}Time`] * 60 )}
               className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
                 mode === m ? "bg-indigo-600 text-white shadow-lg" : "text-slate-500 hover:text-slate-300"
               }`}
@@ -250,10 +290,13 @@ useEffect(() => {
             variant="ghost"
             size="icon"
             onClick={handleTimerComplete}
-            className="rounded-full hover:bg-white/5 text-slate-500"
+            className="  rounded-full hover:bg-white/5 text-slate-500 "
+            disabled={mode === "focus" }
           >
             <SkipForward className="w-5 h-5" />
           </Button>
+         
+  
         </div>
 
         {/* Sessions Counter */}
@@ -280,6 +323,7 @@ useEffect(() => {
      
       <audio ref={audioRef} src="/bell2.wav"  preload="auto"   />
     </div>
+    <KeyboardHelp isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
      <PomodoroMiniWidget
      time={time}
      mode={mode}
