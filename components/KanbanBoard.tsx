@@ -159,7 +159,7 @@ else if (status !== "Done" && draggedTask.status === "Done") {
             <div
               onDragOver={onDragOver}
               onDrop={(e) => onDrop(e, column)}
-              className="bg-slate-900/30 border border-white/5 rounded-3xl p-3  sm:min-h-[450px] transition-all hover:bg-slate-900/50 hover:border-indigo-500/20 relative"
+              className="bg-slate-900/30 border border-white/5 rounded-3xl p-3 h-[450px] overflow-y-auto no-scrollbar transition-all hover:bg-slate-900/50 hover:border-indigo-500/20 relative"
             >
               <AnimatePresence mode="popLayout">
                 {tasks
