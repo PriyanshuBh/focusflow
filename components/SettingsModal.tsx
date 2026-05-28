@@ -5,12 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { defaultSettings, useTimerContext } from "@/contexts/TimerContext";
 import { useState, useEffect } from "react";
 import { VisuallyHidden } from "@/components/visually-hidden";
 import { Switch } from "./ui/switch";
 import { Settings2, Zap, Coffee, BarChart3 } from "lucide-react";
-
+import { defaultSettings, useTimerContext } from "@/contexts/TimerContext";
 
 interface SettingsModalProps {
   open: boolean;
@@ -48,6 +47,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
         </div>
 
         <div className="p-6 space-y-8 overflow-y-auto max-h-[80vh]">
+
           {/* Timer Durations Section */}
           <section className="space-y-4">
             <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Durations (Minutes)</h3>
