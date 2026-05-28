@@ -37,6 +37,9 @@ interface TimerContextType {
   metrics: TimerMetrics;
   updateMetrics: (type: keyof TimerMetrics, value: number) => void;
   resetMetrics: () => void;
+  isZenMode: boolean;
+  setIsZenMode: React.Dispatch<React.SetStateAction<boolean>>;
+  toggleZenMode: () => void;
 }
 
 export const defaultSettings: TimerSettings = {
@@ -68,6 +71,33 @@ export function TimerProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<TimerSettings>(defaultSettings);
   const [metrics, setMetrics] = useState<TimerMetrics>(defaultMetrics);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isZenMode, setIsZenMode] = useState(false);
+
+  const toggleZenMode = () => {
+    setIsZenMode((prev) => {
+      const next = !prev;
+      if (next) {
+        if (typeof document !== "undefined" && document.documentElement.requestFullscreen && !document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+      } else {
+        if (typeof document !== "undefined" && document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        setIsZenMode(false);
+      }
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
 
   useEffect(() => {
     const savedSettings = localStorage.getItem("timerSettings");
@@ -106,7 +136,6 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     setMetrics((prev) => {
       let updated = { ...prev };
 
-      // Handle standard additive metrics (Focus sessions, time, breaks)
       if (
         type === "focusSessions" ||
         type === "totalFocusTime" ||
@@ -117,39 +146,29 @@ export function TimerProvider({ children }: { children: ReactNode }) {
         updated[type] = (prev[type] as number) + value;
       }
 
-      // 🛡️ STREAK LOGIC: Triggered when a focus session is recorded
       if (type === "focusSessions" && value > 0) {
-
         const today = new Date();
         const lastDate = new Date(prev.lastUpdated);
-        
-        // Reset time parts to compare only the calendar date
         const isToday = today.toDateString() === lastDate.toDateString();
-        
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         const isYesterday = yesterday.toDateString() === lastDate.toDateString();
 
-       // IF IT IS THE FIRST SESSION EVER (Streak is 0)
-      if (prev.dailyStreak === 0) {
-        updated.dailyStreak = 1;
-      } 
-      // IF IT IS A NEW DAY (Not today)
-      else if (!isToday) {
-        if (isYesterday) {
-          updated.dailyStreak = prev.dailyStreak + 1; // Continued streak
-        } else {
-          updated.dailyStreak = 1; // Broke streak, starting over
+        if (prev.dailyStreak === 0) {
+          updated.dailyStreak = 1;
+        } else if (!isToday) {
+          if (isYesterday) {
+            updated.dailyStreak = prev.dailyStreak + 1;
+          } else {
+            updated.dailyStreak = 1;
+          }
         }
-      }
-        
-        // Update Best Streak if current daily streak is higher
+
         if (updated.dailyStreak > prev.bestFocusStreak) {
           updated.bestFocusStreak = updated.dailyStreak;
         }
       }
 
-      // Always update the timestamp
       updated.lastUpdated = new Date();
 
       localStorage.setItem("timerMetrics", JSON.stringify(updated));
@@ -162,11 +181,18 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     setMetrics(defaultMetrics);
   };
 
-  if (!isLoaded) return null; // Prevent hydration mismatch
-
   return (
     <TimerContext.Provider
-      value={{ settings, updateSettings, metrics, updateMetrics, resetMetrics }}
+      value={{
+        settings,
+        updateSettings,
+        metrics,
+        updateMetrics,
+        resetMetrics,
+        isZenMode,
+        setIsZenMode,
+        toggleZenMode,
+      }}
     >
       {children}
     </TimerContext.Provider>
