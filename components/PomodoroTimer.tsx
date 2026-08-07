@@ -13,14 +13,11 @@ import {
   HelpCircle,
   Maximize2,
   Minimize2,
-  Sparkles,
-  Target,
-  X
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SettingsModal } from "./SettingsModal";
 import { useTimerContext } from "@/contexts/TimerContext";
-import { usePlannerContext } from "@/contexts/PlannerContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { PomodoroMiniWidget } from "./PomodoroMiniWidget";
 import { useKeyboardControls } from "@/hooks/useKeyboardControls";
@@ -30,7 +27,6 @@ type TimerMode = "focus" | "shortBreak" | "longBreak";
 
 export default function PomodoroTimer() {
   const { settings, metrics, updateMetrics, isZenMode, toggleZenMode } = useTimerContext();
-  const { activeTaskTitle, setActiveTaskTitle } = usePlannerContext();
   const [time, setTime] = useState(settings.focusTime * 60);
   const [isActive, setIsActive] = useState(false);
   const [mode, setMode] = useState<TimerMode>("focus");

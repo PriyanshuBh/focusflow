@@ -7,9 +7,7 @@ import {
   Circle, 
   Trash2, 
   Plus, 
-  Play, 
   Clock, 
-  Calendar, 
   Layers, 
   Zap, 
   Repeat, 
@@ -24,7 +22,6 @@ export const TimeBlocker = React.memo(() => {
   const {
     tasks,
     timeBlocks,
-    setActiveTaskTitle,
     addTask,
     toggleTask,
     deleteTask,
@@ -34,7 +31,6 @@ export const TimeBlocker = React.memo(() => {
     pushIncompleteToTomorrow,
   } = usePlannerContext();
 
-  const [activeTab, setActiveTab] = useState<"buckets" | "canvas">("canvas");
   const [newTitle, setNewTitle] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<TaskCategory>("today");
 
