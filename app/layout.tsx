@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { PwaRegister } from "@/components/PwaRegister";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,10 +14,23 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  themeColor: "#4f46e5",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export const metadata: Metadata = {
-  title: "FocusFlow | Professional Pomodoro & Kanban Sanctuary",
+  title: "FocusFlow | Minimalist Deep Work Dashboard",
   description:
-    "Elevate your productivity with FocusFlow. A minimalist deep-work dashboard featuring a Pomodoro timer, Kanban task management, and built-in ambient focus sounds.",
+    "Elevate your productivity with FocusFlow. A minimalist deep-work dashboard featuring a Pomodoro timer, horizontal Kanban management, unified Time Blocker, and ambient focus sounds.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "FocusFlow",
+  },
   keywords: [
     "Pomodoro Timer",
     "Kanban Board",
@@ -27,17 +41,19 @@ export const metadata: Metadata = {
     "Task Management",
     "FocusFlow",
     "Next.js Productivity App",
+    "PWA Focus App",
+    "Offline Pomodoro",
   ],
   authors: [{ name: "Priyanshu Bharti" }],
   openGraph: {
-    title: "FocusFlow | Deep Work Sanctuary",
+    title: "FocusFlow | Minimalist Deep Work Dashboard",
     description:
       "Master your workflow with the ultimate Pomodoro and Kanban integration.",
     url: "https://focusflow-pb.vercel.app",
     siteName: "FocusFlow",
     images: [
       {
-        url: "https://focusflow-pb.vercel.app/og-image.png", // Ensure this image exists in /public
+        url: "https://focusflow-pb.vercel.app/og-image.png",
         width: 1200,
         height: 630,
         alt: "FocusFlow Dashboard Preview",
@@ -48,7 +64,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "FocusFlow | Professional Productivity Hub",
+    title: "FocusFlow | Minimalist Deep Work Dashboard",
     description:
       "Stop multitasking. Start flowing. Pomodoro + Kanban + Atmosphere Engine.",
     images: ["https://focusflow-pb.vercel.app/og-image.png"],
@@ -56,7 +72,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    apple: "/logo.png",
   },
 };
 
@@ -96,8 +112,8 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <PwaRegister />
         </ThemeProvider>
-        {/* <Analytics /> */}
       </body>
     </html>
   );

@@ -6,7 +6,8 @@ export function useKeyboardControls(
   toggleTimer: () => void,
   resetTimer: () => void,
   skipSession: () => void,
-  toggleHelp: () => void 
+  toggleHelp: () => void,
+  toggleZenMode?: () => void
 ) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -19,7 +20,7 @@ export function useKeyboardControls(
       if (isTyping) return;
 
       // Handle the '?' key (Shift + /)
-      if (event.key === "?" || event.code === "Slash" && event.shiftKey) {
+      if (event.key === "?" || (event.code === "Slash" && event.shiftKey)) {
         event.preventDefault();
         toggleHelp();
       }
@@ -35,6 +36,17 @@ export function useKeyboardControls(
         case "KeyS":
           skipSession();
           break;
+        case "KeyF":
+          if (toggleZenMode) {
+            event.preventDefault();
+            toggleZenMode();
+          }
+          break;
+        case "Escape":
+          if (toggleZenMode) {
+            toggleZenMode();
+          }
+          break;
         case "KeyN":
           // Focus the "New Task" input
           const taskInput = document.querySelector('input[placeholder*="Focus on"]') as HTMLInputElement;
@@ -48,6 +60,6 @@ export function useKeyboardControls(
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [toggleTimer, resetTimer, skipSession]);
+  }, [toggleTimer, resetTimer, skipSession, toggleHelp, toggleZenMode]);
 }
 

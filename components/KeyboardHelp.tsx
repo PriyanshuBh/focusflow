@@ -4,9 +4,11 @@ import { X, Keyboard } from "lucide-react";
 export function KeyboardHelp({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
   const shortcuts = [
     { key: "Space", desc: "Start / Pause Timer" },
+    { key: "F", desc: "Toggle Zen / Fullscreen Mode" },
     { key: "R", desc: "Reset Timer" },
     { key: "S", desc: "Skip to Next Session" },
     { key: "N", desc: "Focus New Task Input" },
+    { key: "Esc", desc: "Exit Zen Mode" },
     { key: "?", desc: "Show / Hide this menu" },
   ];
 
